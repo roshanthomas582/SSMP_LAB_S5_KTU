@@ -1,200 +1,130 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-int searchf(FILE *fp , char str[]);
-int searchloc(int start);
-int writetr(char tr[] , int* start, int* tcount , char opcode[] , char loc[], FILE *fp , char list[],char addr[], char label[], char operand[], FILE *input , int a);
-int main()
+
+char opcode[10], operand[10], label[10], locctr[10], textrec[150], address[10], objcode[10]; 
+int trstart = 0, length, trlength = 0, startaddr = 0; //initialize variables for lengths and starting addresses
+FILE *intermediate, *optab, *symtab, *listing, *objectcode; //create File Pointers
+
+int searchfile(FILE *fp, char str[])  //function to return the address of opcode and symbols to generate object code
 {
-    char opcode[10], operand[10], label[10],loc[10] , tr[150] , addr[10], list[10];
-    int start, length,tcount=0 , initial;
-    FILE *input, *optab, *symtab,*listing,*objcode;
+    char str1[10], addr[10];
+    rewind(fp); //move file pointer to the beginning to search the file from start
+    while (fscanf(fp, "%s %s", str1, addr) != EOF) //read (symbol or opcode) and its corresponding address
+        if ( (strcmp(str, str1)) ==0)  
+            return (int)strtol(addr, NULL, 16); // if (opcode or symbol) is found return its corresponding address in decimal
+    return 0; //if not found return address as 0
+}
+
+void writeTextRec(int size, int isNewRec) 
+{
+    if(strlen(textrec)) //if there is unwritten textrecord in buffer write it to object code
+        fprintf(objectcode,"T^%06X^%02X%s\n",trstart, trlength, textrec);
+    textrec[0]='\0'; //after writing text record initialize the buffer as empty
+    trlength = size; //change the length of buffer to the size of new record recieved
+    if(isNewRec)  //if there is new record waiting add it to buffer
+        strcat(textrec, "^"), strcat(textrec, objcode);
+    strcpy(address, locctr); 
+    fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand); //read next input line
+    trstart = (int)strtol(locctr, NULL, 16); //set the location of new input line as the starting address of next text record
+}
+
+void updateTextRec(int size) 
+{
+    trlength += size; //update text record size. max text record size is 30
+    strcat(textrec, "^"), strcat(textrec, objcode);
+    strcpy(address, locctr);
+    fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand);
+}
+
+int main() 
+{
     optab = fopen("optab.txt", "r");
     symtab = fopen("symtab.txt", "r");
-    input = fopen("intermediate.txt", "r");
-    listing = fopen("listing.txt","w");
-    objcode = fopen("objectcode.txt","w");
-    fscanf(input, "\t%s\t%s\t%s",label, opcode, operand);
-    start=(int)strtol(operand,NULL,16);
-    initial=start;
-    while (strcmp(opcode, "END") != 0)
-       fscanf(input, "%s\t%s\t%s\t%s",loc, label, opcode, operand);
-    length= ((int)strtol(loc,NULL,16)) - start;
-    rewind(input);
-    fscanf(input, "\t%s\t%s\t%s",label, opcode, operand);
-    if (!(strcmp(opcode, "START") )) 
+    intermediate = fopen("intermediate.txt", "r");
+    listing = fopen("listing.txt", "w");
+    objectcode = fopen("objectcode.txt", "w");
+    
+    fscanf(intermediate, "\t%s\t%s\t%s", label, opcode, operand);
+    startaddr = trstart = (int)strtol(operand, NULL, 16);
+    
+    while (strcmp(opcode, "END")) 
+        fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand);
+        //iterate till the end of intermediate file to find the length of program (end -start)
+    length = ((int)strtol(locctr, NULL, 16)) - trstart;
+    
+    rewind(intermediate); //move file pointer to beginning to start from the beginning
+    fscanf(intermediate, "\t%s\t%s\t%s", label, opcode, operand);
+    
+    if ( (strcmp(opcode, "START")) == 0 ) 
     {
-       fprintf(objcode,"H^%-6s^%06X^%06X\n",label,start,length);
-       fprintf(listing,"\t%s\t%s\t%s\t\n",label,opcode,operand);
-       fscanf(input, "%s\t%s\t%s\t%s",loc, label, opcode, operand);
-       strcpy(addr,loc);
-	   start=(int)strtol(loc,NULL,16);
+        fprintf(objectcode, "H^%-6s^%06X^%06d\n", label, trstart, length); //insert the header record to object code
+        fprintf(listing, "\t%s\t%s\t%s\t\n", label, opcode, operand); //insert the first line to assembly listing
+        fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand);//read second input line
+        strcpy(address, locctr);
     }
-    else
+    else 
     {
-       printf("Intermediate file error");
-       exit(0);
-    }
-	tr[0]='\0';
-    while (strcmp(opcode, "END") != 0)
+        printf("Intermediate file error");
+        exit(0);
+    } 
+    
+    textrec[0]='\0'; //initialize text record empty
+    while (strcmp(opcode, "END")) 
     { 
-        int count =(int)strtol(loc,NULL,16)-(int)strtol(addr,NULL,16);
-    	if((addr[0]==loc[0]) && count<512)
-    	{
-    		if(strcmp(opcode,"RESW")==0 || strcmp(opcode,"RESB")==0)
-		    {
-    		   fprintf(listing,"%s\t%s\t%s\t%s\t\n",loc,label,opcode,operand);
-			   strcpy(addr,loc);
-			   fscanf(input, "%s\t%s\t%s\t%s",loc, label, opcode, operand);
-		    }
-		    else if(strcmp(opcode,"WORD")==0)
-		    {
-    		    sprintf(list,"%06X",atoi(operand));
-    	        fprintf(listing,"%s\t%s\t%s\t%s\t%s\n",loc,label,opcode,operand,list);
-				if((tcount+3)<=30)
-				{
-				   tcount+=3;
-    	           strcat(tr,"^");
-    	           strcat(tr,list);
-    	           strcpy(addr,loc);
-    	           fscanf(input, "%s\t%s\t%s\t%s",loc, label, opcode, operand);
-				}
-				else
-				   writetr(tr , &start,&tcount,opcode,loc,objcode ,list,addr,label,operand,input,3);
-		    }
-			else if(strcmp(opcode,"BYTE")==0)
-			{
-               char bytes[150] = {0};
-               int j = 0;
-               if (operand[0] == 'C')
-			    {
-                  for (int i = 2; operand[i] != '\''; i++) 
-                  {
-                      sprintf(bytes + j, "%02X", (unsigned char)operand[i]);
-                      j += 2;
-                  }
-                } 
-               else if (operand[0] == 'X')
-               {
-                  for (int i = 2; operand[i] != '\''; i += 2) 
-                  {
-                      bytes[j++] = operand[i];
-                      bytes[j++] = operand[i + 1];
-                  }
-               }
-			   fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", loc, label, opcode, operand, bytes);
-			   if((tcount+(j/2))<=30)
-			   {
-				  tcount+=j/2;
-                  strcat(tr,"^");
-    	          strcat(tr,bytes);
-    	          strcpy(addr,loc);
-                  fscanf(input, "%s\t%s\t%s\t%s", loc, label, opcode, operand);
-			   }
-			   else
-			       writetr(tr , &start,&tcount,opcode,loc,objcode ,bytes,addr,label,operand,input,j/2);
-            }
-		    else
-    	    {
-    	   	 int opa=searchf(optab,opcode);
-    	        int sya=searchf(symtab,operand);
-    	        sprintf(list,"%02X%04X",opa,sya);
-    	        fprintf(listing,"%s\t%s\t%s\t%s\t%s\n",loc,label,opcode,operand,list);
-				if((tcount+3)<=30)
-				{
-				   tcount+=3;
-    	           strcat(tr,"^");
-    	           strcat(tr,list);
-    	           strcpy(addr,loc);
-    	           fscanf(input, "%s\t%s\t%s\t%s",loc, label, opcode, operand);
-				}
-				else
-				   writetr(tr , &start,&tcount,opcode,loc,objcode ,list,addr,label,operand,input,3);
-    	    }
-		    if(strcmp(opcode,"END")==0)
-		    {
-			   if(strlen(tr))
-			   {
-			      fprintf(objcode,"T^%06X^%02X%s\n",start,tcount,tr);
-    		      tr[0]='\0';
-				  start=(int)strtol(loc,NULL,16);
-			   }
-		    }
-    	}
-    	else
-    	{
-			if(strlen(tr))
-			{
-    		   fprintf(objcode,"T^%06X^%02X%s\n",start,tcount,tr);
-			   if((strcmp(opcode,"RESW")!=0) && (strcmp(opcode,"RESB")!=0))
-			       start=(int)strtol(loc,NULL,16);
-			   else
-			       start=searchloc((int)strtol(loc,NULL,16));
-			}
-    		tr[0]='\0';
-			tcount=0;
-			strcpy(addr,loc);
-    	}
-    }
-    fprintf(listing,"%s\t%s\t%s\t%s\t\n",loc,label,opcode,operand);
-	fprintf(objcode,"E^%06X",initial);
-	fclose(optab);
-	fclose(symtab);
-	fclose(listing);
-	fclose(objcode);
-	fclose(input);
-}
-int searchf(FILE *fp, char str[]) 
-{
-    char str1[10], mne[10], str2[10];
-    rewind(fp);
-    while (fscanf(fp, "%s %s", str1, mne) != EOF) 
-    {
-        char *index = strchr(str, ',');
-        if (index != NULL) 
+        if((address[0]==locctr[0])) 
         {
-            size_t len = index - str;
-            strncpy(str2, str, len);
-            str2[len] = '\0';
-            if (strcmp(str1, str2) == 0) 
-                return (int)strtol(mne, NULL, 16) + 32768;
+            if( (strcmp(opcode, "RESW")) ==0 || (strcmp(opcode, "RESB")) ==0) 
+            {
+                fprintf(listing, "%s\t%s\t%s\t%s\t\n", locctr, label, opcode, operand); //write the line to assembly listing. 
+                writeTextRec(0, 0);
+            }
+            else if( (strcmp(opcode, "WORD")) ==0) 
+            {
+                sprintf(objcode, "%06X", atoi(operand));
+                objcode[6] = '\0';
+                fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode);
+                (trlength + 3) <= 30 ? updateTextRec(3) : writeTextRec(3, 1); //if size less than 30 add tr to buffer else write the record
+            }
+            else if( (strcmp(opcode, "BYTE")) ==0) 
+            {
+                int j = 0;
+                if (operand[0] == 'C')
+                    for (int i = 2; operand[i] != '\''; i++) //eg: C'EOF'. index 2 is used to start from E the actual content and discarding C''
+                    {
+                        sprintf(objcode + j, "%02X", (unsigned char)operand[i]); //hexadecimal of each character is stored in array
+                        j += 2; 
+                    }
+                else if (operand[0] == 'X')
+                    for (int i = 2; operand[i] != '\''; i++) //eg: X'F1'. index 2 is used to start from F the actual content
+                        objcode[j++] = operand[i];
+                objcode[j] = '\0';
+                fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode);
+                (trlength + (j / 2)) <= 30 ? updateTextRec(j / 2) : writeTextRec(j / 2, 1); //add to buffer if size less than 30 else write to object code
+            }
+            else 
+            {
+                int opcodeAddr = searchfile(optab, opcode);
+                int symbolAddr = searchfile(symtab, operand);
+                sprintf(objcode, "%02X%04X", opcodeAddr, symbolAddr); 
+                objcode[6] = '\0';
+                fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode);
+                (trlength + 3) <= 30 ? updateTextRec(3) : writeTextRec(3, 1);
+            }
+            if( (strcmp(opcode, "END") ==0) && strlen(textrec)) 
+                fprintf(objectcode, "T^%06X^%02X%s\n", trstart, trlength, textrec);
         }
-        if (strcmp(str, str1) == 0) 
-            return (int)strtol(mne, NULL, 16);
+        else 
+        {
+            if(strlen(textrec)) 
+                fprintf(objectcode, "T^%06X^%02X%s\n", trstart, trlength, textrec);
+            trstart = (int)strtol(locctr, NULL, 16);
+            textrec[0] = '\0';
+            trlength = 0;
+            strcpy(address, locctr);
+        }
     }
-    return 0;
-}
-int searchloc(int start)
-{
-	FILE *fp = fopen("intermediate.txt","r");
-	char loc[10],label[10],opcode[10],operand[10],addr[10];
-	fscanf(fp, "\t%s\t%s\t%s",label, opcode, operand);
-	sprintf(addr,"%X",start);
-	while ((strcmp(loc,addr))!=0)
-		fscanf(fp, "%s\t%s\t%s\t%s",loc, label, opcode, operand);
-    while(fscanf(fp, "%s\t%s\t%s\t%s",loc, label, opcode, operand)!=EOF)
-		if((strcmp(opcode,"RESW")!=0) && (strcmp(opcode,"RESB"))!=0)
-		{
-			fclose(fp);
-			return (int)strtol(loc,NULL,16);
-		}
-	fclose(fp);
-	return start;
-}
-int writetr(char tr[] , int* start, int* tcount , char opcode[] , char loc[], FILE *fp , char list[],char addr[], char label[], char operand[] , FILE *input , int a)
-{
-    if(strlen(tr))
-	{
-    	fprintf(fp,"T^%06X^%02X%s\n",*start,*tcount,tr);
-		if((strcmp(opcode,"RESW")!=0) && (strcmp(opcode,"RESB")!=0))
-		    *start=(int)strtol(loc,NULL,16);
-		else
-		    *start=searchloc((int)strtol(loc,NULL,16));
-	}
-    tr[0]='\0';
-	*tcount=a;
-	strcat(tr,"^");
-    strcat(tr,list);
-    strcpy(addr,loc);
-    fscanf(input, "%s\t%s\t%s\t%s",loc, label, opcode, operand);
+    fprintf(listing, "%s\t%s\t%s\t%s\t\n", locctr, label, opcode, operand);
+    fprintf(objectcode, "E^%06X", startaddr);
+    fclose(optab), fclose(symtab), fclose(listing), fclose(objectcode), fclose(intermediate);
 }
