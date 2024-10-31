@@ -16,7 +16,7 @@ int main()
     
     if (!input || !optab || !symtab || !output) 
     {
-        printErrorAndExit("Error accessing files."); //check files are opened
+        printf("Error accessing files."); //check files are opened
         exit(0);
     }
     fscanf(input, "%s\t%s\t%s", label, opcode, operand);
