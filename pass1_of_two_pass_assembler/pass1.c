@@ -1,3 +1,4 @@
+//implementation of pass1 of two pass assembler in c
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>

@@ -1,8 +1,9 @@
+//implementation of pass2 of two pass assembler in C.
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
 
-char opcode[10], operand[10], label[10], locctr[10], textrec[150], address[10], objcode[10]; 
+char opcode[10], operand[10], label[10], locctr[10], textrecbuff[150], address[10], objcode[10]; 
 int trstart = 0, length, trlength = 0, startaddr = 0; //initialize variables for lengths and starting addresses
 FILE *intermediate, *optab, *symtab, *listing, *objectcode; //create File Pointers
 
@@ -18,12 +19,12 @@ int searchfile(FILE *fp, char str[])  //function to return the address of opcode
 
 void writeTextRec(int size, int isNewRec) 
 {
-    if(strlen(textrec)) //if there is unwritten textrecord in buffer write it to object code
-        fprintf(objectcode,"T^%06X^%02X%s\n",trstart, trlength, textrec);
-    textrec[0]='\0'; //after writing text record initialize the buffer as empty
+    if(strlen(textrecbuff)) //if there is unwritten textrecord in buffer write it to object code
+        fprintf(objectcode,"T^%06X^%02X%s\n",trstart, trlength, textrecbuff);
+    textrecbuff[0]='\0'; //after writing text record initialize the buffer as empty
     trlength = size; //change the length of buffer to the size of new record recieved
     if(isNewRec)  //if there is new record waiting add it to buffer
-        strcat(textrec, "^"), strcat(textrec, objcode);
+        strcat(textrecbuff, "^"), strcat(textrecbuff, objcode);
     strcpy(address, locctr); 
     fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand); //read next input line
     trstart = (int)strtol(locctr, NULL, 16); //set the location of new input line as the starting address of next text record
@@ -32,7 +33,7 @@ void writeTextRec(int size, int isNewRec)
 void updateTextRec(int size) 
 {
     trlength += size; //update text record size. max text record size is 30
-    strcat(textrec, "^"), strcat(textrec, objcode);
+    strcat(textrecbuff, "^"), strcat(textrecbuff, objcode);
     strcpy(address, locctr);
     fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand);
 }
@@ -69,7 +70,7 @@ int main()
         exit(0);
     } 
     
-    textrec[0]='\0'; //initialize text record empty
+    textrecbuff[0]='\0'; //initialize text record empty
     while (strcmp(opcode, "END")) 
     { 
         if((address[0]==locctr[0])) 
@@ -106,25 +107,25 @@ int main()
             {
                 int opcodeAddr = searchfile(optab, opcode);
                 int symbolAddr = searchfile(symtab, operand);
-                sprintf(objcode, "%02X%04X", opcodeAddr, symbolAddr); 
+                sprintf(objcode, "%02X%04X", opcodeAddr, symbolAddr); //generate object code as string concat of opcode address and symbol address
                 objcode[6] = '\0';
-                fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode);
+                fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode); //write object code to assembly listing
                 (trlength + 3) <= 30 ? updateTextRec(3) : writeTextRec(3, 1);
             }
-            if( (strcmp(opcode, "END") ==0) && strlen(textrec)) 
-                fprintf(objectcode, "T^%06X^%02X%s\n", trstart, trlength, textrec);
+            if( (strcmp(opcode, "END") ==0) && strlen(textrecbuff)) //if opcode reached END write the buffer to text record if not written
+                fprintf(objectcode, "T^%06X^%02X%s\n", trstart, trlength, textrecbuff);
         }
-        else 
+        else // if new address section started create new text record after writing the existing buffer to text record
         {
-            if(strlen(textrec)) 
-                fprintf(objectcode, "T^%06X^%02X%s\n", trstart, trlength, textrec);
+            if(strlen(textrecbuff)) 
+                fprintf(objectcode, "T^%06X^%02X%s\n", trstart, trlength, textrecbuff);
             trstart = (int)strtol(locctr, NULL, 16);
-            textrec[0] = '\0';
+            textrecbuff[0] = '\0'; //set buffer as empty after writing it
             trlength = 0;
             strcpy(address, locctr);
         }
     }
     fprintf(listing, "%s\t%s\t%s\t%s\t\n", locctr, label, opcode, operand);
-    fprintf(objectcode, "E^%06X", startaddr);
+    fprintf(objectcode, "E^%06X", startaddr); //write the end record
     fclose(optab), fclose(symtab), fclose(listing), fclose(objectcode), fclose(intermediate);
 }
