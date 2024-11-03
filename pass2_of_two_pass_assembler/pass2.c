@@ -73,6 +73,7 @@ int main()
     textrecbuff[0]='\0'; //initialize text record empty
     while (strcmp(opcode, "END")) 
     { 
+
         if((address[0]==locctr[0])) 
         {
             if( (strcmp(opcode, "RESW")) ==0 || (strcmp(opcode, "RESB")) ==0) 
@@ -80,13 +81,18 @@ int main()
                 fprintf(listing, "%s\t%s\t%s\t%s\t\n", locctr, label, opcode, operand); //write the line to assembly listing. 
                 writeTextRec(0, 0);
             }
+
             else if( (strcmp(opcode, "WORD")) ==0) 
             {
                 sprintf(objcode, "%06X", atoi(operand));
                 objcode[6] = '\0';
                 fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode);
-                (trlength + 3) <= 30 ? updateTextRec(3) : writeTextRec(3, 1); //if size less than 30 add tr to buffer else write the record
+                if ( (trlength + 3) <= 30 )
+                    updateTextRec(3);
+                else
+                    writeTextRec(3, 1); //if size less than 30 add tr to buffer else write the record
             }
+
             else if( (strcmp(opcode, "BYTE")) ==0) 
             {
                 int j = 0;
@@ -101,8 +107,12 @@ int main()
                         objcode[j++] = operand[i];
                 objcode[j] = '\0';
                 fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode);
-                (trlength + (j / 2)) <= 30 ? updateTextRec(j / 2) : writeTextRec(j / 2, 1); //add to buffer if size less than 30 else write to object code
+                if( (trlength + (j / 2)) <= 30 )
+                    updateTextRec(j / 2);
+                else
+                    writeTextRec(j / 2, 1); //add to buffer if size less than 30 else write to object code
             }
+
             else 
             {
                 int opcodeAddr = searchfile(optab, opcode);
@@ -110,11 +120,16 @@ int main()
                 sprintf(objcode, "%02X%04X", opcodeAddr, symbolAddr); //generate object code as string concat of opcode address and symbol address
                 objcode[6] = '\0';
                 fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode); //write object code to assembly listing
-                (trlength + 3) <= 30 ? updateTextRec(3) : writeTextRec(3, 1);
+                if( (trlength + 3) <= 30 )
+                    updateTextRec(3); 
+                else    
+                    writeTextRec(3, 1);
             }
+
             if( (strcmp(opcode, "END") ==0) && strlen(textrecbuff)) //if opcode reached END write the buffer to text record if not written
                 fprintf(objectcode, "T^%06X^%02X%s\n", trstart, trlength, textrecbuff);
         }
+
         else // if new address section started create new text record after writing the existing buffer to text record
         {
             if(strlen(textrecbuff)) 
@@ -125,6 +140,7 @@ int main()
             strcpy(address, locctr);
         }
     }
+    
     fprintf(listing, "%s\t%s\t%s\t%s\t\n", locctr, label, opcode, operand);
     fprintf(objectcode, "E^%06X", startaddr); //write the end record
     fclose(optab), fclose(symtab), fclose(listing), fclose(objectcode), fclose(intermediate);
