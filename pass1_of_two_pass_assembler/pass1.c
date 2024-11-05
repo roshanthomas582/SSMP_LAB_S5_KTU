@@ -20,6 +20,7 @@ int main()
         printf("Error accessing files."); //check files are opened
         exit(0);
     }
+
     fscanf(input, "%s\t%s\t%s", label, opcode, operand);
     if ( (strcmp(opcode, "START")==0) )//if first opcode is start
     {
@@ -31,11 +32,12 @@ int main()
     } 
     while (strcmp(opcode, "END") != 0) 
     {
-        fprintf(output, "%X\t", locctr); //printing address as hexadecimal
-        if ((strcmp(label, "**"))) //if there is symbol
+        fprintf(output, "%X\t", locctr); //writing locctr to file  as hexadecimal
+        if ( (strcmp(label, "**")) !=0) //if there is symbol
         {
             fclose(symtab);
-            if(!(searchf(fopen("symtab.txt","a+"), label)))
+            symtab=fopen("symtab.txt","a+");
+            if( (searchf(symtab, label)) == 0) //returns 0 if a match is not found
                 fprintf(symtab, "%s\t%X\n", label, locctr);
                 //adding symbol to symtab if it is not found in symtab
             else
@@ -44,6 +46,7 @@ int main()
             	exit(0);
             }
         }
+
         if(searchf(optab,opcode))
             locctr+=3; //default length of instruction
         else if (strcmp(opcode, "WORD") == 0)
