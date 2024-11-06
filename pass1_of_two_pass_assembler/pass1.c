@@ -57,7 +57,7 @@ int main()
     }
     fprintf(output, "%X\t%s\t%s\t%s\n", locctr,label, opcode, operand); //insert last line with opcode 'END'
     fclose(symtab) , fclose(output) , fclose(optab) , fclose(input);
-    printf("\nThe length of program: %X", (locctr-start)); //length of the program in hexadecimal
+    printf("\nThe length of program: %X\n", (locctr-start)); //length of the program in hexadecimal
     return 0;
 }
 

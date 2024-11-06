@@ -13,7 +13,7 @@ int searchfile(FILE *fp, char str[])  //function to return the address of opcode
     rewind(fp); //move file pointer to the beginning to search the file from start
     while (fscanf(fp, "%s %s", str1, addr) != EOF) //read (symbol or opcode) and its corresponding address line by line from file untill End of File
         if ( (strcmp(str, str1)) ==0)  //compare opcode or symbol in file that is str1 to the opcode or symbol read from the source program
-            return (int)strtol(addr, NULL, 16); // if (opcode or symbol) is found return its corresponding address in decimal
+            return (int)strtol(addr, NULL, 16); // if (opcode or symbol) is found return its corresponding address as integer
     return 0; //if not found return address as 0
 }
 
@@ -56,7 +56,7 @@ int main()
     
     if ( (strcmp(opcode, "START")) == 0 ) 
     {
-        fprintf(objectcode, "H^%-6s^%06X^%06d\n", label, trstart, length); //insert the header record to object code
+        fprintf(objectcode, "H^%-6s^%06X^%06X\n", label, trstart, length); //insert the header record to object code
         fprintf(listing, "\t%s\t%s\t%s\t\n", label, opcode, operand); //insert the first line to assembly listing
         fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand);//read second input line
     }
@@ -73,11 +73,11 @@ int main()
         if( (strcmp(opcode, "RESW")) ==0 || (strcmp(opcode, "RESB")) ==0) 
         {
             fprintf(listing, "%s\t%s\t%s\t%s\t\n", locctr, label, opcode, operand); //write the line to assembly listing. 
-            fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand); //Read the next input from intermediate file
+            fscanf(intermediate, "%s\t%s\t%s\t%s", locctr, label, opcode, operand); //Read the next input from intermediate file as RESW and RESB don't have object code
         }
         else if( (strcmp(opcode, "WORD")) ==0) 
         {
-            sprintf(objcode, "%06X", atoi(operand));
+            sprintf(objcode, "%06X", atoi(operand)); //set the operand as object code
             objcode[6] = '\0';
             fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode);
             if ( (trlength + 3) <= 30 )
@@ -91,7 +91,7 @@ int main()
             if (operand[0] == 'C')
                 for (int i = 2; operand[i] != '\''; i++) //eg: C'EOF'. index 2 is used to start from E the actual content and discarding C''
                 {
-                    sprintf(objcode + j, "%02X", (unsigned char)operand[i]); //hexadecimal of each character is stored in array
+                    sprintf(objcode + j, "%02X", (unsigned char)operand[i]); //hexadecimal of ASCII each character is stored in array
                     j += 2; 
                 }
             else if (operand[0] == 'X')
@@ -108,7 +108,7 @@ int main()
         {
             int opcodeAddr = searchfile(optab, opcode);
             int symbolAddr = searchfile(symtab, operand);
-            sprintf(objcode, "%02X%04X", opcodeAddr, symbolAddr); //generate object code as string concat of opcode address and symbol address
+            sprintf(objcode, "%02X%04X", opcodeAddr, symbolAddr); //generate object code as string concatination of opcode address and symbol address
             objcode[6] = '\0';
             fprintf(listing, "%s\t%s\t%s\t%s\t%s\n", locctr, label, opcode, operand, objcode); //write object code to assembly listing
             if( (trlength + 3) <= 30 )
