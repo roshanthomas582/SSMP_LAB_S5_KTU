@@ -1,10 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
+
 int requests[100], i, j, numRequests, totalHeadMovement = 0, initialHead, diskSize, currentMovement , ch , posi; 
+
 void fcfs();
 void scan();
 void cscan();
 void read();
+
 void main()
 {
     int op;
@@ -53,6 +56,7 @@ void fcfs()
     printf("Total seek time is : %d\n", totalHeadMovement);
     printf("Average seek time is %f: \n",totalHeadMovement*1.0/numRequests);
 }
+
 void read()
 {
     printf("Enter total disk size: ");
@@ -81,6 +85,7 @@ void read()
     printf("1.Move towards Right 2.Move towards Left Enter your choice: ");
     scanf("%d",&ch);
 }
+
 void scan()
 {
     read();
@@ -136,6 +141,7 @@ void scan()
     else
         printf("Wrong Choice!");
 }
+
 void cscan()
 {
     read();

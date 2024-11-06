@@ -1,43 +1,51 @@
 #include<stdio.h>
 #include<stdlib.h>
+
 void fcfs();
 void sjf();
 void rr();
 void prio();
+
 void main()
 {
-    int op;
-    while (1)
-    {
-        printf("\n\n1.FCFS 2.SJF 3.Round Robin 4.Priority 5.Exit Enter Your Choice: ");
-        scanf("%d",&op);
-        switch (op)
-        {
-           case 1:
-              fcfs();
-              break;
-           case 2:
-              sjf();
-              break;
-           case 3:
-              rr();
-              break;
-           case 4:
-              prio();
-              break;
-           case 5:
-              exit(0);
-              break;
-           default:
-              printf("Wrong Choice!");
-              break;
-        }
-    }
+
+   int op;
+   
+   while (1)
+   {
+      printf("\n\n1.FCFS 2.SJF 3.Round Robin 4.Priority 5.Exit Enter Your Choice: ");
+      scanf("%d",&op);
+      
+      switch (op)
+      {
+         case 1:
+            fcfs();
+            break;
+         case 2:
+            sjf();
+            break;
+         case 3:
+            rr();
+            break;
+         case 4:
+            prio();
+            break;
+         case 5:
+            exit(0);
+            break;
+         default:
+            printf("Wrong Choice!");
+            break;
+      }
+   }
 }
+
 void fcfs()
 {
+   
    int no;
    float sumtat=0 , sumwt=0;
+   
    printf("Enter the number of processes: ");
    scanf("%d",&no);
    int btime[no] , tatime[no] , wtime[no] ,artime[no],pid[no];
@@ -49,6 +57,7 @@ void fcfs()
       scanf("%d",&artime[i]);
       pid[i]=i;
    }
+   
    for (int i = 0; i < no; i++)
       for (int j = 0; j < no-i-1; j++)
          if (artime[j]>artime[j+1])
@@ -66,7 +75,7 @@ void fcfs()
             pid[j+1]=temp;
          }
    wtime[0]=0 , tatime[0]=btime[0];
-   sumtat=sumtat+tatime[0];
+   sumtat+=tatime[0];
    for (int i = 1; i < no; i++)
    {
       wtime[i]=wtime[i-1]+btime[i-1];
@@ -116,8 +125,10 @@ void sjf()
             pid[j]=pid[j+1];
             pid[j+1]=temp;
          }
+   
    wtime[0]=0 , tatime[0]=btime[0];
    sumtat=sumtat+tatime[0];
+   
    for (int i = 1; i < no; i++)
    {
       wtime[i]=wtime[i-1]+btime[i-1];
@@ -125,16 +136,19 @@ void sjf()
       sumtat+=tatime[i];
       sumwt+=wtime[i]; 
    }
+   
    printf("\nProcess\tBurst Time\tWaiting Time\tTurnaround Time");
    for (int i = 0; i < no; i++)
       printf("\nP[%d]\t\t%d\t\t%d\t\t%d",pid[i],btime[i],wtime[i],tatime[i]);
    printf("\nAverage Waiting Time is: %f",sumwt/no);
    printf("\nAverage Turn Around Time is: %f",sumtat/no);
    printf("\nGanttchart");
+   
    printf("\n= = = = = = = = = = = = = = = = =\n");
    for (int i = 0; i < no; i++)
       printf("  P[%d]\t",pid[i]);
    printf("\n= = = = = = = = = = = = = = = = =\n");
+   
    int temp=0;
    for (int i = 0; i <= no; i++)
    {
@@ -142,6 +156,7 @@ void sjf()
       temp+=btime[i];
    }
 }
+
 void rr()
 {
    int i, limit, total = 0, x, counter = 0, time_quantum , j=0 , k=0,sum=0;
@@ -204,6 +219,7 @@ void rr()
    printf("\n\nAverage Waiting Time:\t%f", average_wait_time);
    printf("\nAvg Turnaround Time:\t%f\n", average_turnaround_time);
 }
+
 void prio()
 {
    int no;
