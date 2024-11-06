@@ -24,6 +24,7 @@ int main()
         fprintf(output, "\t%s\t%s\t%s\n", label, opcode, operand); //writing first line to intermediate file
         fscanf(input, "%s\t%s\t%s", label, opcode, operand); //reading second line from source program
     } 
+    
     while (strcmp(opcode, "END") != 0) //repeats the following untill opcode reaches END
     {
         fprintf(output, "%X\t%s\t%s\t%s\n", locctr , label, opcode, operand); //writes the current line to intermediate file. %X to print locctr as hexadecimal
@@ -63,7 +64,7 @@ int main()
 int searchf(FILE *fp, char str[]) 
 {
     char str1[10], mne[10];
-    rewind(fp); //move file pointer to start to search from begining
+    rewind(fp); //move file pointer to begining to search from begining
     while (fscanf(fp, "%s %s", str1 , mne) != EOF) //reads opcode and it's address line by line from optab until file reaches End of File
         if (strcmp(str1, str) == 0) //Compares opcode read from the optab file that is str1 with opcode found in source program that is str
             return 1; //return 1 if opcode found. 
