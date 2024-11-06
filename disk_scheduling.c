@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-int requests[100], i, j, numRequests, totalHeadMovement = 0, initialHead, diskSize, currentMovement , ch , posi; 
+int requests[100], i, j, numRequests, totalHeadMovement = 0, initialHead, diskSize, currentMovement  , posi; 
 
 void fcfs();
 void scan();
@@ -82,122 +82,61 @@ void read()
             posi = i;
             break;
         }
-    printf("1.Move towards Right 2.Move towards Left Enter your choice: ");
-    scanf("%d",&ch);
 }
 
 void scan()
 {
     read();
     totalHeadMovement = 0;
-    if(ch==1)
+    printf("\n---SCAN Head Movements---\n");
+    for (i = posi; i < numRequests; i++) 
     {
-        printf("\n---SCAN Head Movements---\n");
-        for (i = posi; i < numRequests; i++) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        currentMovement = abs(diskSize - requests[i - 1] - 1);
-        printf("From  %d to right end: %d\n",requests[i-1],currentMovement);
+        currentMovement = abs(requests[i] - initialHead);
+        printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
         totalHeadMovement += currentMovement;
-        initialHead = diskSize-1;
-        for (i = posi-1; i >= 0; i--) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        printf("Total head movement: %d\n", totalHeadMovement);
-        printf("Average seek time is %f: \n",totalHeadMovement*1.0/numRequests);
+        initialHead = requests[i];
     }
-    else if (ch==2)
+    currentMovement = abs(diskSize - requests[i - 1] - 1);
+    printf("From  %d to right end: %d\n",requests[i-1],currentMovement);
+    totalHeadMovement += currentMovement;
+    initialHead = diskSize-1;
+    for (i = posi-1; i >= 0; i--) 
     {
-        printf("\n---SCAN Head Movements---\n");
-        for (i = posi-1; i >=0; i--) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        currentMovement = abs(0 - requests[0]);
-        printf("From  %d to left end: %d\n",requests[0],currentMovement);
+        currentMovement = abs(requests[i] - initialHead);
+        printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
         totalHeadMovement += currentMovement;
-        initialHead = 0;
-        for (i = posi; i < numRequests; i++) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        printf("Total head movement: %d\n", totalHeadMovement);
-        printf("Average seek time is %f: \n",totalHeadMovement*1.0/numRequests);
+        initialHead = requests[i];
     }
-    else
-        printf("Wrong Choice!");
+    printf("Total head movement: %d\n", totalHeadMovement);
+    printf("Average seek time is %f: \n",totalHeadMovement*1.0/numRequests);
 }
 
 void cscan()
 {
     read();
     totalHeadMovement = 0;
-    if(ch==1)
+    printf("\n--- C-SCAN Head Movements---\n");
+    for (i = posi; i < numRequests; i++) 
     {
-        printf("\n--- C-SCAN Head Movements---\n");
-        for (i = posi; i < numRequests; i++) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        currentMovement = abs(diskSize - requests[i - 1] - 1);
-        printf("From  %d to right end: %d\n",requests[i-1],currentMovement);
+        currentMovement = abs(requests[i] - initialHead);
+        printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
         totalHeadMovement += currentMovement;
-        printf("From  right end to start: %d\n",abs(diskSize - 1));
-        totalHeadMovement += abs(diskSize - 1);
-        initialHead = 0;
-        for (i = 0; i < posi; i++) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From   %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        printf("Total head movement: %d\n", totalHeadMovement);
-        printf("Average seek time is %f: \n",totalHeadMovement*1.0/numRequests);
+        initialHead = requests[i];
     }
-    else if(ch==2)
+    currentMovement = abs(diskSize - requests[i - 1] - 1);
+    printf("From  %d to right end: %d\n",requests[i-1],currentMovement);
+    totalHeadMovement += currentMovement;
+    printf("From  right end to start: %d\n",abs(diskSize - 1));
+    totalHeadMovement += abs(diskSize - 1);
+    initialHead = 0;
+    for (i = 0; i < posi; i++) 
     {
-        printf("\n--- C-SCAN Head Movements---\n");
-        for (i = posi-1; i >=0; i--) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From  %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        currentMovement = abs(0 - requests[0]);
-        printf("From  %d to left end: %d\n",requests[0],currentMovement);
+        currentMovement = abs(requests[i] - initialHead);
+        printf("From   %d to %d: %d\n",initialHead,requests[i],currentMovement);
         totalHeadMovement += currentMovement;
-        printf("From  start to right end: %d\n",abs(diskSize - 1));
-        totalHeadMovement += abs(diskSize - 1);
-        initialHead = diskSize-1;
-        for (i = numRequests-1; i >= posi; i--) 
-        {
-            currentMovement = abs(requests[i] - initialHead);
-            printf("From   %d to %d: %d\n",initialHead,requests[i],currentMovement);
-            totalHeadMovement += currentMovement;
-            initialHead = requests[i];
-        }
-        printf("Total head movement: %d\n", totalHeadMovement);
-        printf("Average seek time is %f: \n",totalHeadMovement*1.0/numRequests);
-    }   
-    else
-        printf("Wrong Choice!");
+        initialHead = requests[i];
+    }
+    printf("Total head movement: %d\n", totalHeadMovement);
+    printf("Average seek time is %f: \n",totalHeadMovement*1.0/numRequests);
+
 }
